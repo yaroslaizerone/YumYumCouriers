@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "772726972796",
+    "project_id": "yumyumdelivery-12ebb",
+    "storage_bucket": "yumyumdelivery-12ebb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772726972796:android:9f5124ec64ac51d67204f9",
+        "android_client_info": {
+          "package_name": "com.example.couriersyumyum"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3LvSa4OFOOtEWlBodv_udg1xyZrbmZV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772726972796:android:06949f229b60683a7204f9",
+        "android_client_info": {
+          "package_name": "com.example.yumyumcouriers"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3LvSa4OFOOtEWlBodv_udg1xyZrbmZV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772726972796:android:7e704cbcf2318aee7204f9",
+        "android_client_info": {
+          "package_name": "com.example.yumyumcouriers_copy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3LvSa4OFOOtEWlBodv_udg1xyZrbmZV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

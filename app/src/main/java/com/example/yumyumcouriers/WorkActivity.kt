@@ -1,50 +1,55 @@
 package com.example.yumyumcouriers
 
-import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.yumyumcouriers.R
 import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.directions.driving.DrivingRouter
-import com.yandex.mapkit.geometry.Point
+import com.yandex.mapkit.geometry.Point as MapPoint
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
-
-class WorkActivity : AppCompatActivity() {
-
+class WorkActivity : AppCompatActivity(){
     private lateinit var mapView: MapView
-    private lateinit var drivingRouter: DrivingRouter
+    private lateinit var btnShowBottomSheet: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_work)
-        mapView = findViewById(R.id.mapview)
 
+        // Инициализация MapKit и DirectionsApi
         MapKitFactory.setApiKey("17ef2389-2ef1-4c0d-8e26-bcd08e83e535")
         MapKitFactory.setLocale("ru_RU")
-
-
-        // Начальная и конечная точки маршрута
-        val start = Point(55.036457, 82.921606)
-        val end = Point(55.052655, 82.893037)
-
+        setContentView(R.layout.activity_work)
+        mapView = findViewById(R.id.mapview)
         mapView.map.move(
-            CameraPosition(start, 15.0f, 0.0f, 0.0f),
-            null
-        )
-    }
+            CameraPosition(
+                MapPoint(55.031091, 82.920675),
+                /* zoom = */ 17.0f,
+                /* azimuth = */ 0.0f,
+                /* tilt = */ 30.0f
+            ))
 
-    override fun onStart() {
-        super.onStart()
-        MapKitFactory.getInstance().onStart()
-        mapView.onStart()
-    }
+        // Инициализация кнопки для отображения Bottom Sheet Dialog
+        btnShowBottomSheet = findViewById(R.id.idBtnShowBottomSheet)
+        btnShowBottomSheet.setOnClickListener {
+            // Создание Bottom Sheet Dialog
+            val dialog = BottomSheetDialog(this)
 
-    override fun onStop() {
-        mapView.onStop()
-        MapKitFactory.getInstance().onStop()
-        super.onStop()
+            // Настройка контента Bottom Sheet Dialog
+            val view = layoutInflater.inflate(R.layout.bottom_sheet_work, null)
+            val btnClose = view.findViewById<Button>(R.id.idBtnDismiss)
+            btnClose.setOnClickListener {
+                dialog.dismiss()
+            }
+            dialog.setCanceledOnTouchOutside(true)
+            dialog.setCancelable(true)
+            dialog.setContentView(view)
+            dialog.show()
+        }
+
+        // Запуск построения маршрута
+        val start = MapPoint(55.031091, 82.920675) // Начальная точка
+        val end = MapPoint(55.041091, 82.920675) // Конечная точка
     }
 }

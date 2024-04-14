@@ -49,11 +49,6 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation("com.yandex.android:maps.mobile:4.5.1-lite")
-    implementation("com.yandex.android:maps.mobile:4.5.1-navikit")
-    implementation("com.google.android.gms:play-services-location:18.0.0")
-    implementation("com.yandex.mapkit.styling:automotivenavigation:4.5.1")
-    implementation("com.yandex.mapkit.styling:roadevents:4.5.1")
-    implementation("com.yandex.android:navigator-sdk:3.0.0")
     implementation(libs.transportation.consumer)
     implementation(libs.androidx.navigation.common.ktx) // Зависимость для яндекс карт
     testImplementation(libs.junit)

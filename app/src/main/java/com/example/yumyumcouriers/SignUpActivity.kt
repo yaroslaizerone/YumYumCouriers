@@ -2,10 +2,12 @@ package com.example.yumyumcouriers
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.yumyumcouriers.databinding.ActivitySignUpBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -38,6 +40,31 @@ class SignUpActivity : AppCompatActivity() {
                                 // Email не зарегистрирован, можно создать нового пользователя
                                 firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
                                     if (it.isSuccessful) {
+                                        val currentUser = FirebaseAuth.getInstance().currentUser
+                                        currentUser?.let { user ->
+                                            // Получаем uid пользователя
+                                            val uid = user.uid
+                                            intent.putExtra("UID", uid)
+                                            // Создаем объект данных для записи в коллекцию Firestore
+                                            val userData = hashMapOf(
+                                                "uid" to uid,
+                                                "role" to "4"
+                                            )
+                                            val db = FirebaseFirestore.getInstance()
+                                            val authCollectionRef = db.collection("authentication")
+
+                                            // Добавляем данные в коллекцию Firestore
+                                            authCollectionRef.add(userData)
+                                                .addOnSuccessListener { documentReference ->
+                                                    // Обработка успешного добавления записи
+                                                    Log.d("TAG", "DocumentSnapshot added with ID: ${documentReference.id}")
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    // Обработка ошибок при добавлении записи
+                                                    Log.e("TAG", "Error adding document", e)
+                                                }
+
+                                        }
                                         val intent = Intent(this, WorkActivity::class.java)
                                         startActivity(intent)
                                     } else {

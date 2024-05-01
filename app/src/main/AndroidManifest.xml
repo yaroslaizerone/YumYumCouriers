@@ -15,6 +15,9 @@
         android:theme="@style/Theme.YumYumCouriers"
         tools:targetApi="31">
         <activity
+            android:name=".SingUpDataActivity"
+            android:exported="false" />
+        <activity
             android:name=".AddSlotsActivity"
             android:exported="false" />
         <activity

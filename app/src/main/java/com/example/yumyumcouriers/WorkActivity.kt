@@ -1,8 +1,12 @@
 package com.example.yumyumcouriers
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
+import androidx.core.app.ActivityOptionsCompat
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
@@ -16,15 +20,17 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class WorkActivity : AppCompatActivity(){
     private lateinit var mapView: MapView
-    private lateinit var btnShowBottomSheet: Button
+    private lateinit var btnShowBottomSheet: AppCompatButton
+    private lateinit var userProfile: LinearLayout
     private lateinit var mapObjectCollection: MapObjectCollection
     private lateinit var placemarkMapObject: PlacemarkMapObject
+    private lateinit var uid: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Инициализация MapKit и DirectionsApi
-        MapKitFactory.setApiKey("17ef2389-2ef1-4c0d-8e26-bcd08e83e535")
+        MapKitFactory.setApiKey("d39bb6d0-8d48-4c96-8e84-755ca88e07c6")
         MapKitFactory.setLocale("ru_RU")
         setContentView(R.layout.activity_work)
         mapView = findViewById(R.id.mapview)
@@ -35,11 +41,20 @@ class WorkActivity : AppCompatActivity(){
                 /* azimuth = */ 0.0f,
                 /* tilt = */ 30.0f
             ))
-        setMarkerInStartLocation()
+        //setMarkerInStartLocation()
 
+        uid = intent.getStringExtra("UID").toString()
 
         // Инициализация кнопки для отображения Bottom Sheet Dialog
         btnShowBottomSheet = findViewById(R.id.idBtnShowBottomSheet)
+        userProfile = findViewById(R.id.userProfileFail)
+
+        userProfile.setOnClickListener{
+            val intent = Intent(this, DocumentProblemActivity::class.java)
+            val options = ActivityOptionsCompat.makeCustomAnimation(this, R.anim.slide_in, R.anim.slide_out)
+            startActivity(intent, options.toBundle())
+        }
+
         btnShowBottomSheet.setOnClickListener {
             // Создание Bottom Sheet Dialog
             val dialog = BottomSheetDialog(this)

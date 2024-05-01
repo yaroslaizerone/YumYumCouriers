@@ -20,7 +20,7 @@ class SignInActivity : AppCompatActivity() {
 
         firebaseAuth = FirebaseAuth.getInstance()
         binding.textView.setOnClickListener {
-            val intent = Intent(this, SignUpActivity::class.java)
+            val intent = Intent(this, SingUpDataActivity::class.java)
             val options = ActivityOptionsCompat.makeCustomAnimation(this, R.anim.slide_in, R.anim.slide_out)
             startActivity(intent, options.toBundle())
         }
@@ -33,7 +33,11 @@ class SignInActivity : AppCompatActivity() {
 
                 firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener {
                     if (it.isSuccessful) {
+                        val uid = getUID()
+
                         val intent = Intent(this, SignInActivity::class.java)
+                        intent.putExtra("UID", uid)
+
                         val options = ActivityOptionsCompat.makeCustomAnimation(this, R.anim.slide_in, R.anim.slide_out)
                         startActivity(intent, options.toBundle())
                     } else {
@@ -51,10 +55,16 @@ class SignInActivity : AppCompatActivity() {
         super.onStart()
 
         if(firebaseAuth.currentUser != null){
-            val intent = Intent(this, WorkActivity::class.java) // Замените SomeOtherActivity на нужный вам экран
-
+            val intent = Intent(this, WorkActivity::class.java)
+            val uid = getUID()
+            intent.putExtra("UID", uid)
             startActivity(intent)
             finish() // Завершите SignInActivity, чтобы пользователь не мог к нему вернуться кнопкой "назад"
         }
+    }
+
+    private fun getUID(): String {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        return currentUser?.uid ?: ""
     }
 }

@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.yumyumcouriers.databinding.ActivitySignUpBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.*
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -38,45 +39,103 @@ class SignUpActivity : AppCompatActivity() {
                             val result = task.result
                             if (result?.signInMethods?.isEmpty() == true) {
                                 // Email не зарегистрирован, можно создать нового пользователя
-                                firebaseAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener {
-                                    if (it.isSuccessful) {
-                                        val currentUser = FirebaseAuth.getInstance().currentUser
-                                        currentUser?.let { user ->
-                                            // Получаем uid пользователя
-                                            val uid = user.uid
-                                            intent.putExtra("UID", uid)
-                                            // Создаем объект данных для записи в коллекцию Firestore
-                                            val userData = hashMapOf(
-                                                "uid" to uid,
-                                                "role" to "4"
-                                            )
-                                            val db = FirebaseFirestore.getInstance()
-                                            val authCollectionRef = db.collection("authentication")
+                                firebaseAuth.createUserWithEmailAndPassword(email, pass)
+                                    .addOnCompleteListener {
+                                        if (it.isSuccessful) {
+                                            val currentUser = FirebaseAuth.getInstance().currentUser
+                                            currentUser?.let { user ->
+                                                // Получаем uid пользователя
+                                                val uid = user.uid
+                                                intent.putExtra("UID", uid)
+                                                // Создаем объект данных для записи в коллекцию Firestore
+                                                val userData = hashMapOf(
+                                                    "uid" to uid,
+                                                    "role" to "4"
+                                                )
+                                                val db = FirebaseFirestore.getInstance()
+                                                val authCollectionRef = db.collection("authentication")
 
-                                            // Добавляем данные в коллекцию Firestore
-                                            authCollectionRef.add(userData)
-                                                .addOnSuccessListener { documentReference ->
-                                                    // Обработка успешного добавления записи
-                                                    Log.d("TAG", "DocumentSnapshot added with ID: ${documentReference.id}")
-                                                }
-                                                .addOnFailureListener { e ->
-                                                    // Обработка ошибок при добавлении записи
-                                                    Log.e("TAG", "Error adding document", e)
-                                                }
+                                                // Добавляем данные в коллекцию Firestore
+                                                authCollectionRef.add(userData)
+                                                    .addOnSuccessListener { documentReference ->
+                                                        // Обработка успешного добавления записи
+                                                        Log.d(
+                                                            "TAG",
+                                                            "DocumentSnapshot added with ID: ${documentReference.id}"
+                                                        )
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        // Обработка ошибок при добавлении записи
+                                                        Log.e("TAG", "Error adding document", e)
+                                                    }
 
+                                                // Генерируем случайный ID
+                                                val randomId = Random().nextInt(10000) + 1
+
+                                                // Получаем значения из intent
+                                                val name = intent.getStringExtra("NAME").toString()
+                                                val surname = intent.getStringExtra("SURNAME").toString()
+                                                val patronic = intent.getStringExtra("PATRONIC").toString()
+                                                val number = intent.getStringExtra("NUMBER").toString()
+                                                val gender = intent.getStringExtra("GENDER").toString()
+
+                                                // Создаем объект данных для записи в коллекцию Firestore
+                                                val staffData = hashMapOf(
+                                                    "name" to name,
+                                                    "surname" to surname,
+                                                    "patronic" to patronic,
+                                                    "number" to number,
+                                                    "gender" to gender,
+                                                    "employmentrecord" to "",
+                                                    "snils" to "",
+                                                    "medicalbook" to "",
+                                                    "psn" to "",
+                                                    "id" to randomId,
+                                                    "uid" to uid
+                                                )
+
+                                                val staffCollectionRef = db.collection("staff")
+
+                                                // Добавляем данные в коллекцию Firestore
+                                                staffCollectionRef.add(staffData)
+                                                    .addOnSuccessListener { documentReference ->
+                                                        // Обработка успешного добавления записи
+                                                        Log.d(
+                                                            "TAG",
+                                                            "DocumentSnapshot added with ID: ${documentReference.id}"
+                                                        )
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        // Обработка ошибок при добавлении записи
+                                                        Log.e("TAG", "Error adding document", e)
+                                                    }
+
+
+                                            }
+                                            val intent = Intent(this, WorkActivity::class.java)
+                                            startActivity(intent)
+                                        } else {
+                                            Toast.makeText(
+                                                this,
+                                                it.exception.toString(),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
-                                        val intent = Intent(this, WorkActivity::class.java)
-                                        startActivity(intent)
-                                    } else {
-                                        Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
                                     }
-                                }
                             } else {
                                 // Email уже зарегистрирован
-                                Toast.makeText(this, "Этот email уже зарегистрирован", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Этот email уже зарегистрирован",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         } else {
-                            Toast.makeText(this, "Ошибка при проверке email: ${task.exception}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Ошибка при проверке email: ${task.exception}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 } else {

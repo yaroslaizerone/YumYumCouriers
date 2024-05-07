@@ -17,6 +17,8 @@ import com.yandex.mapkit.map.MapObjectCollection
 
 
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 class WorkActivity : AppCompatActivity(){
     private lateinit var mapView: MapView
@@ -44,6 +46,10 @@ class WorkActivity : AppCompatActivity(){
         //setMarkerInStartLocation()
 
         uid = intent.getStringExtra("UID").toString()
+
+        // Проверка на наличие ограничений
+
+        val db = Firebase.firestore
 
         // Инициализация кнопки для отображения Bottom Sheet Dialog
         btnShowBottomSheet = findViewById(R.id.idBtnShowBottomSheet)

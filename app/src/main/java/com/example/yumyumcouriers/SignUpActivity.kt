@@ -90,6 +90,8 @@ class SignUpActivity : AppCompatActivity() {
                                                     "snils" to "",
                                                     "medicalbook" to "",
                                                     "psn" to "",
+                                                    "homeregistration" to "",
+                                                    "inn" to "",
                                                     "id" to randomId,
                                                     "uid" to uid
                                                 )

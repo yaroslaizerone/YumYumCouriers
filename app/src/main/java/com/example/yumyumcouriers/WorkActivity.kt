@@ -2,8 +2,10 @@ package com.example.yumyumcouriers
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.app.ActivityOptionsCompat
@@ -68,20 +70,25 @@ class WorkActivity : AppCompatActivity(){
                 // Обработка документов
                 for (document in documents) {
                     // Получаем данные из документа
-                    val employmentRecord = document.getString("employmentrecord") ?: ""
-                    val snils = document.getString("snils") ?: ""
-                    val medicalBook = document.getString("medicalbook") ?: ""
-                    val psn = document.getString("psn") ?: ""
-                    val homeRegistration = document.getString("homeregistration") ?: ""
-                    val inn = document.getString("inn") ?: ""
+                    val employmentRecord = document.getString("employmentrecord")
+                    val snils = document.getString("snils")
+                    val medicalBook = document.getString("medicalbook")
+                    val psn = document.getString("psn")
+                    val homeRegistration = document.getString("homeregistration")
+                    val inn = document.getString("inn")
+
+                    Log.d(
+                        "psn",
+                        "DocumentSnapshot added with ID: ${psn}"
+                    )
 
                     // Проверяем, есть ли пустые значения
-                    if (employmentRecord.isEmpty()) emptyFieldsCount++
-                    if (snils.isEmpty()) emptyFieldsCount++
-                    if (medicalBook.isEmpty()) emptyFieldsCount++
-                    if (psn.isEmpty()) emptyFieldsCount++
-                    if (homeRegistration.isEmpty()) emptyFieldsCount++
-                    if (inn.isEmpty()) emptyFieldsCount++
+                    if (employmentRecord == "") emptyFieldsCount++
+                    if (snils == "") emptyFieldsCount++
+                    if (medicalBook == "") emptyFieldsCount++
+                    if (psn == "") emptyFieldsCount++
+                    if (homeRegistration == "") emptyFieldsCount++
+                    if (inn == "") emptyFieldsCount++
                 }
 
                 // Выводим результат подсчета
@@ -97,6 +104,7 @@ class WorkActivity : AppCompatActivity(){
 
         userProfile.setOnClickListener{
             val intent = Intent(this, DocumentProblemActivity::class.java)
+            intent.putExtra("UID", uid)
             val options = ActivityOptionsCompat.makeCustomAnimation(this, R.anim.slide_in, R.anim.slide_out)
             startActivity(intent, options.toBundle())
         }

@@ -261,6 +261,17 @@
 
     </LinearLayout>
 
+    <CheckBox
+        android:id="@+id/checkBoxAccept"
+        android:layout_width="386dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="20dp"
+        android:text="Я ознакомлен с политикой в отношении обработки персональных данных"
+        android:textColor="@color/black"
+        android:textSize="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout6" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/DocumentReady"
         android:layout_width="match_parent"

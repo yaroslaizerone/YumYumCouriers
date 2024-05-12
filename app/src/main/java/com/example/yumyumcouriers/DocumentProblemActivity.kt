@@ -5,13 +5,22 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.SpannableString
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.util.Log
+import android.view.View
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import java.io.ByteArrayOutputStream
 
 class DocumentProblemActivity : AppCompatActivity() {
     private val REQUEST_IMAGE_CAPTURE = 1
@@ -27,8 +36,10 @@ class DocumentProblemActivity : AppCompatActivity() {
     private lateinit var indexWorkBook: ImageView
     private lateinit var indexSNILS: ImageView
     private lateinit var indexMed: ImageView
+    private lateinit var storageRef: StorageReference
 
-    private var courierID: String = "87613hc81hf811hf971ghf908"
+    private lateinit var typeData: String
+    private lateinit var courierUID: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,32 +65,57 @@ class DocumentProblemActivity : AppCompatActivity() {
         indexMed = findViewById(R.id.indMed)
 
         requestPassport.setOnClickListener{
-            dispatchTakePictureIntent(courierID, "passport")
+            dispatchTakePictureIntent("passport")
         }
         requestDataHome.setOnClickListener{
-            dispatchTakePictureIntent(courierID, "datahome")
+            dispatchTakePictureIntent("datahome")
         }
         requestINN.setOnClickListener{
-            dispatchTakePictureIntent(courierID, "inn")
+            dispatchTakePictureIntent( "inn")
         }
         requestWorkBook.setOnClickListener{
-            dispatchTakePictureIntent(courierID, "workbook")
+            dispatchTakePictureIntent("workbook")
         }
         requestSNILS.setOnClickListener{
-            dispatchTakePictureIntent(courierID, "snils")
+            dispatchTakePictureIntent("snils")
         }
         requestMed.setOnClickListener{
-            dispatchTakePictureIntent(courierID, "med")
+            dispatchTakePictureIntent("med")
         }
+
+        // Получаем ссылку на Firebase Storage
+        storageRef = FirebaseStorage.getInstance().reference
+        courierUID = intent.getStringExtra("UID").toString()
+
+        val checkBox: CheckBox = findViewById(R.id.checkBoxAccept)
+
+        // Создаем SpannableString с текстом гиперссылки
+        val policyText = "Я ознакомлен с политикой в отношении обработки персональных данных"
+        val spannableString = SpannableString(policyText)
+        val clickableSpan = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                // Открываем Bottom Sheet Dialog при нажатии на ссылку
+                val bottomSheetDialog = BottomSheetDialog(this@DocumentProblemActivity)
+                bottomSheetDialog.setContentView(R.layout.bottom_sheet_politician)
+                bottomSheetDialog.show()
+            }
+        }
+        // Определяем начальный и конечный индексы для подстроки, которую мы хотим сделать гиперссылкой
+        val start = policyText.indexOf("политикой в отношении обработки персональных данных")
+        val end = start + "политикой в отношении обработки персональных данных".length
+        // Применяем ClickableSpan только к подстроке
+        spannableString.setSpan(clickableSpan, start, end, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        // Устанавливаем SpannableString в CheckBox и делаем ссылку кликабельной
+        checkBox.text = spannableString
+        checkBox.movementMethod = LinkMovementMethod.getInstance()
     }
 
 
-    private fun dispatchTakePictureIntent(courierID: String, typeData: String) {
+    private fun dispatchTakePictureIntent(typePhoto: String) {
         Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
             takePictureIntent.resolveActivity(packageManager)?.also {
-                // Добавляем данные в Intent
-                takePictureIntent.putExtra("courierID", courierID)
-                takePictureIntent.putExtra("typeData", typeData)
+                typeData = typePhoto
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
             }
         }
@@ -88,25 +124,39 @@ class DocumentProblemActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
-            // Получаем данные из Intent
-            val courierID = data?.getStringExtra("courierID")
-            val typeData = data?.getStringExtra("typeData")
-
-            // Получаем изображение из файла
             val imageBitmap = data?.extras?.get("data") as Bitmap?
+
             if (imageBitmap != null) {
-                Log.d("TAG", "ImageBitmap: $imageBitmap")
-                // Устанавливаем изображение в ImageView
-                when (typeData) {
-                    "passport" -> {
-                        indexPassport.setImageBitmap(imageBitmap)
-                        indexPassport.setBackgroundResource(R.drawable.round_green_card)
-                        Toast.makeText(this, "ура!", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                indexPassport.setImageBitmap(imageBitmap)
+                Toast.makeText(this, "фото загружается", Toast.LENGTH_SHORT).show()
+                uploadImageToFirebaseStorage(imageBitmap, courierUID ?: "", typeData ?: "")
             } else {
                 Toast.makeText(this, "Прикрепите изображение!", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun uploadImageToFirebaseStorage(bitmap: Bitmap, courierUID: String, typeData: String) {
+        // Преобразовываем изображение в массив байтов
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val data = baos.toByteArray()
+
+        // Формируем путь для загрузки изображения в Firebase Storage
+        val imagePath = "images/$courierUID/$typeData.jpg"
+
+        // Получаем ссылку на файл в Firebase Storage
+        val imageRef = storageRef.child(imagePath)
+
+        // Загружаем изображение с шифрованием в Firebase Storage
+        imageRef.putBytes(data)
+            .addOnSuccessListener {
+                // Обработка успешной загрузки
+                Log.d("IMU", "Image uploaded successfully")
+            }
+            .addOnFailureListener { e ->
+                // Обработка ошибки загрузки
+                Log.e("IMU", "Error uploading image", e)
+            }
     }
 }

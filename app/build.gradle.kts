@@ -51,6 +51,7 @@ dependencies {
     implementation("com.yandex.android:maps.mobile:4.5.1-lite")
     implementation(libs.transportation.consumer)
     implementation(libs.androidx.navigation.common.ktx) // Зависимость для яндекс карт
+    implementation("com.google.android.gms:play-services-location:21.2.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

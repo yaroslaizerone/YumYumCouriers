@@ -15,12 +15,15 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
 
 class DocumentProblemActivity : AppCompatActivity() {
     private val REQUEST_IMAGE_CAPTURE = 1
@@ -36,10 +39,13 @@ class DocumentProblemActivity : AppCompatActivity() {
     private lateinit var indexWorkBook: ImageView
     private lateinit var indexSNILS: ImageView
     private lateinit var indexMed: ImageView
+    private lateinit var pressImageView: ImageView
     private lateinit var storageRef: StorageReference
+    private lateinit var documentReadyButton: AppCompatButton
 
     private lateinit var typeData: String
     private lateinit var courierUID: String
+    private val dictionary = mutableMapOf<String, ByteArray>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,36 +57,35 @@ class DocumentProblemActivity : AppCompatActivity() {
             insets
         }
 
-        requestPassport = findViewById(R.id.SendDataPassport)
-        requestDataHome = findViewById(R.id.SendDataHome)
-        requestINN = findViewById(R.id.SendDataINN)
-        requestWorkBook = findViewById(R.id.SendDataWorkBook)
-        requestSNILS = findViewById(R.id.SendDataSNILS)
-        requestMed = findViewById(R.id.SendDataMed)
-        indexPassport = findViewById(R.id.indPasport)
-        indexDataHome = findViewById(R.id.indHome)
-        indexINN = findViewById(R.id.indINN)
-        indexWorkBook = findViewById(R.id.indWorkBook)
-        indexSNILS = findViewById(R.id.indSNILS)
-        indexMed = findViewById(R.id.indMed)
+        val photoImageViews = listOf<ImageView>(
+            findViewById(R.id.SendDataPassport),
+            findViewById(R.id.SendDataHome),
+            findViewById(R.id.SendDataINN),
+            findViewById(R.id.SendDataWorkBook),
+            findViewById(R.id.SendDataSNILS),
+            findViewById(R.id.SendDataMed),
+            findViewById(R.id.indPasport),
+            findViewById(R.id.indHome),
+            findViewById(R.id.indINN),
+            findViewById(R.id.indWorkBook),
+            findViewById(R.id.indSNILS),
+            findViewById(R.id.indMed)
+        )
 
-        requestPassport.setOnClickListener{
-            dispatchTakePictureIntent("passport")
-        }
-        requestDataHome.setOnClickListener{
-            dispatchTakePictureIntent("datahome")
-        }
-        requestINN.setOnClickListener{
-            dispatchTakePictureIntent( "inn")
-        }
-        requestWorkBook.setOnClickListener{
-            dispatchTakePictureIntent("workbook")
-        }
-        requestSNILS.setOnClickListener{
-            dispatchTakePictureIntent("snils")
-        }
-        requestMed.setOnClickListener{
-            dispatchTakePictureIntent("med")
+        // Устанавливаем обработчики кликов для каждого ImageView
+        photoImageViews.forEach { imageView ->
+            imageView.setOnClickListener {
+                val typePhoto = when (imageView.id) {
+                    R.id.SendDataPassport, R.id.indPasport -> "passport"
+                    R.id.SendDataHome, R.id.indHome -> "datahome"
+                    R.id.SendDataINN, R.id.indINN -> "inn"
+                    R.id.SendDataWorkBook, R.id.indWorkBook -> "workbook"
+                    R.id.SendDataSNILS, R.id.indSNILS -> "snils"
+                    R.id.SendDataMed, R.id.indMed -> "med"
+                    else -> return@setOnClickListener
+                }
+                dispatchTakePictureIntent(imageView, typePhoto)
+            }
         }
 
         // Получаем ссылку на Firebase Storage
@@ -109,15 +114,26 @@ class DocumentProblemActivity : AppCompatActivity() {
         // Устанавливаем SpannableString в CheckBox и делаем ссылку кликабельной
         checkBox.text = spannableString
         checkBox.movementMethod = LinkMovementMethod.getInstance()
+
+        documentReadyButton.setOnClickListener {
+            uploadAllImagesToFirebaseStorage(dictionary, courierUID)
+        }
     }
 
 
-    private fun dispatchTakePictureIntent(typePhoto: String) {
+    private fun dispatchTakePictureIntent( imageViewSend: ImageView, typePhoto: String) {
         Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
             takePictureIntent.resolveActivity(packageManager)?.also {
                 typeData = typePhoto
+                pressImageView = imageViewSend
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
             }
+        }
+    }
+
+    private fun uploadAllImagesToFirebaseStorage(dictionary: Map<String, ByteArray>, courierUID: String) {
+        for ((typeData, imageBitmap) in dictionary) {
+            uploadImageToFirebaseStorage(imageBitmap, courierUID, typeData)
         }
     }
 
@@ -127,21 +143,43 @@ class DocumentProblemActivity : AppCompatActivity() {
             val imageBitmap = data?.extras?.get("data") as Bitmap?
 
             if (imageBitmap != null) {
-                indexPassport.setImageBitmap(imageBitmap)
-                Toast.makeText(this, "фото загружается", Toast.LENGTH_SHORT).show()
-                uploadImageToFirebaseStorage(imageBitmap, courierUID ?: "", typeData ?: "")
+                changeImage(pressImageView, imageBitmap)
+                val encryptedImage = encryptImage(imageBitmap, courierUID)
+                dictionary[typeData] = encryptedImage
+                if (dictionary.size == 6) {
+                    // Изменяем цвет кнопки DocumentReady и разрешаем ее нажатие
+                    documentReadyButton.setBackgroundResource(R.drawable.rb_open_panel)
+                    documentReadyButton.isEnabled = true
+                }
             } else {
                 Toast.makeText(this, "Прикрепите изображение!", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun uploadImageToFirebaseStorage(bitmap: Bitmap, courierUID: String, typeData: String) {
-        // Преобразовываем изображение в массив байтов
+    private fun encryptImage(image: Bitmap, key: String): ByteArray {
+        // Преобразуем изображение в массив байтов
         val baos = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-        val data = baos.toByteArray()
+        image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val byteArray = baos.toByteArray()
 
+        // Создаем объект SecretKeySpec для использования в шифровании
+        val secretKeySpec = SecretKeySpec(key.toByteArray(), "AES")
+
+        // Инициализируем объект Cipher для шифрования
+        val cipher = Cipher.getInstance("AES")
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
+
+        // Шифруем изображение
+        return cipher.doFinal(byteArray)
+    }
+
+    private fun changeImage(indexView: ImageView, image: Bitmap){
+        indexView.setImageBitmap(image)
+        indexView.setBackgroundResource(0)
+    }
+
+    private fun uploadImageToFirebaseStorage(imageByteArray: ByteArray, courierUID: String, typeData: String) {
         // Формируем путь для загрузки изображения в Firebase Storage
         val imagePath = "images/$courierUID/$typeData.jpg"
 
@@ -149,7 +187,7 @@ class DocumentProblemActivity : AppCompatActivity() {
         val imageRef = storageRef.child(imagePath)
 
         // Загружаем изображение с шифрованием в Firebase Storage
-        imageRef.putBytes(data)
+        imageRef.putBytes(imageByteArray)
             .addOnSuccessListener {
                 // Обработка успешной загрузки
                 Log.d("IMU", "Image uploaded successfully")

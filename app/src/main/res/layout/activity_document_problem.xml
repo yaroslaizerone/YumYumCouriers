@@ -279,7 +279,7 @@
         android:layout_marginTop="156dp"
         android:layout_marginEnd="20dp"
         android:layout_marginStart="20dp"
-        android:background="@drawable/rb_open_panel"
+        android:background="#5A5A5A"
         android:text="Готово"
         android:textColor="@color/white"
         android:textSize="18dp"

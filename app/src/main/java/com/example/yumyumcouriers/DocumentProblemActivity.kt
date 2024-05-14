@@ -41,7 +41,7 @@ class DocumentProblemActivity : AppCompatActivity() {
     private lateinit var indexMed: ImageView
     private lateinit var pressImageView: ImageView
     private lateinit var storageRef: StorageReference
-    private lateinit var documentReadyButton: AppCompatButton
+    private lateinit var documentReady: AppCompatButton
 
     private lateinit var typeData: String
     private lateinit var courierUID: String
@@ -115,7 +115,9 @@ class DocumentProblemActivity : AppCompatActivity() {
         checkBox.text = spannableString
         checkBox.movementMethod = LinkMovementMethod.getInstance()
 
-        documentReadyButton.setOnClickListener {
+        documentReady = findViewById(R.id.DocumentReady)
+
+        documentReady.setOnClickListener {
             uploadAllImagesToFirebaseStorage(dictionary, courierUID)
         }
     }
@@ -148,8 +150,8 @@ class DocumentProblemActivity : AppCompatActivity() {
                 dictionary[typeData] = encryptedImage
                 if (dictionary.size == 6) {
                     // Изменяем цвет кнопки DocumentReady и разрешаем ее нажатие
-                    documentReadyButton.setBackgroundResource(R.drawable.rb_open_panel)
-                    documentReadyButton.isEnabled = true
+                    documentReady.setBackgroundResource(R.drawable.rb_open_panel)
+                    documentReady.isEnabled = true
                 }
             } else {
                 Toast.makeText(this, "Прикрепите изображение!", Toast.LENGTH_SHORT).show()

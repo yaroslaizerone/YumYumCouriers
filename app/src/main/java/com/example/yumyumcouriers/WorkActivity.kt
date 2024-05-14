@@ -36,8 +36,16 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.runBlocking
 import kotlin.math.log
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+
 
 class WorkActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
@@ -47,10 +55,17 @@ class WorkActivity : AppCompatActivity() {
     private lateinit var placemarkMapObject: PlacemarkMapObject
     private lateinit var binding: ActivityWorkBinding
     private lateinit var uid: String
+    private lateinit var longitude: String
+    private lateinit var latitude: String
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     lateinit var locationRequest: LocationRequest
     val PERMISSION_ID = 1010
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val ordersCollection = firestore.collection("orders")
+    private var ordersListener: ListenerRegistration? = null
+    val db = Firebase.firestore
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +96,7 @@ class WorkActivity : AppCompatActivity() {
 
         // Проверка на наличие ограничений
 
-        val db = Firebase.firestore
+
 
         db.collection("staff").whereEqualTo("uid", uid)
             .get()
@@ -147,8 +162,7 @@ class WorkActivity : AppCompatActivity() {
         Log.d("Debug:", CheckPermission().toString())
         Log.d("Debug:", isLocationEnabled().toString())
         RequestPermission()
-        getLastLocation()
-
+        startOrderTracking()
     }
 
     private fun CheckPermission(): Boolean {
@@ -185,7 +199,7 @@ class WorkActivity : AppCompatActivity() {
         )
     }
 
-    private fun getLastLocation() {
+    private fun getLastLocation(): Pair<Double, Double>? {
         if (CheckPermission()) {
             if (isLocationEnabled()) {
                 if (ActivityCompat.checkSelfPermission(
@@ -196,17 +210,20 @@ class WorkActivity : AppCompatActivity() {
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    return
+                    return null
                 }
                 fusedLocationProviderClient.lastLocation.addOnCompleteListener { task ->
-                    var location: Location? = task.result
+                    val location: Location? = task.result
                     if (location == null) {
                         NewLocationData()
                     } else {
+                        latitude = location.latitude.toString()
+                        longitude = location.longitude.toString()
                         Log.d(
                             "Last",
-                            "You Current Location is : Long: " + location.longitude + " , Lat: " + location.latitude
+                            "Your Current Location is: Lat: $latitude, Long: $longitude"
                         )
+
                     }
                 }
             } else {
@@ -216,6 +233,7 @@ class WorkActivity : AppCompatActivity() {
         } else {
             RequestPermission()
         }
+        return null // Возвращаем null, если координаты недоступны
     }
 
     private fun NewLocationData() {
@@ -258,6 +276,54 @@ class WorkActivity : AppCompatActivity() {
         mapView.onStop()
         MapKitFactory.getInstance().onStop()
         super.onStop()
+    }
+
+    // Функция для отслеживания новых записей в коллекции "orders"
+    private fun startOrderTracking() {
+        ordersListener = ordersCollection.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.w("Firestore", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && !snapshot.isEmpty) {
+                for (document in snapshot.documents) {
+                    Log.d("Firestore", "New order id: ${document.id}")
+                    // Дополнительная обработка новой записи, если нужно
+                    getLastLocation()
+                    sendLocationToFirebase()
+                }
+            } else {
+                Log.d("Firestore", "No new orders")
+            }
+        }
+    }
+
+    private fun sendLocationToFirebase(){
+        val docRef = db.collection("staff").whereEqualTo("uid", uid)
+
+        docRef.get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    val docId = document.id
+                    val updateData = hashMapOf(
+                        "latitude" to latitude,
+                        "longitude" to longitude
+                    )
+
+                    db.collection("staff").document(docId)
+                        .update(updateData as Map<String, String>)
+                        .addOnSuccessListener {
+                            Log.d("Firestore", "DocumentSnapshot successfully updated!")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w("Firestore", "Error updating document", e)
+                        }
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w("Firestore", "Error getting documents: ", exception)
+            }
     }
 
     private fun setMarkerInStartLocation() {

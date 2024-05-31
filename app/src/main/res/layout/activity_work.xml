@@ -26,6 +26,7 @@
             android:background="@drawable/round_red_card">
 
             <LinearLayout
+                android:id="@+id/textViewFail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"

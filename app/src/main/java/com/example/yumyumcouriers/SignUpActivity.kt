@@ -89,14 +89,15 @@ class SignUpActivity : AppCompatActivity() {
                                                     "role" to "4",
                                                     "latitude" to "",
                                                     "longitude" to "",
-                                                    "employmentrecord" to "",
-                                                    "snils" to "",
-                                                    "medicalbook" to "",
-                                                    "psn" to "",
-                                                    "homeregistration" to "",
-                                                    "inn" to "",
+                                                    "employmentrecord" to "0",
+                                                    "snils" to "0",
+                                                    "medicalbook" to "0",
+                                                    "psn" to "0",
+                                                    "homeregistration" to "0",
+                                                    "inn" to "0",
                                                     "id" to randomId,
-                                                    "uid" to uid
+                                                    "uid" to uid,
+                                                    "status" to 3
                                                 )
 
                                                 val staffCollectionRef = db.collection("staff")

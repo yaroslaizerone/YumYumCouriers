@@ -75,13 +75,11 @@ class SingUpDataActivity : AppCompatActivity() {
                 var name = binding.nameEt.text.toString()
                 var surname = binding.surnameEt.text.toString()
                 var patronic = binding.parentEt.text.toString()
-                var number = binding.phoneEt.text.toString()
                 var gender = binding.spinnerGender.selectedItem.toString()
                 val intent = Intent(this, SignUpActivity::class.java)
                 intent.putExtra("NAME", name)
                 intent.putExtra("SURNAME", surname)
                 intent.putExtra("PATRONIC", patronic)
-                intent.putExtra("NUMBER", number)
                 intent.putExtra("GENDER", gender)
                 startActivity(intent)
             }

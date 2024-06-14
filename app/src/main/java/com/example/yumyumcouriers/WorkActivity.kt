@@ -48,6 +48,7 @@ import com.google.firebase.firestore.firestore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.yandex.mapkit.geometry.Polyline
+import kotlin.math.log
 
 
 class WorkActivity : AppCompatActivity() {
@@ -68,6 +69,8 @@ class WorkActivity : AppCompatActivity() {
     var status = -1
 
     private var isOrderInProgress = false
+    private var isBottomSheetShowing = false
+    private var isOrderTrackingStarted = false
     private val firestore = FirebaseFirestore.getInstance()
     private val ordersCollection = firestore.collection("orders")
     private var ordersListener: ListenerRegistration? = null
@@ -94,7 +97,7 @@ class WorkActivity : AppCompatActivity() {
         mapView.map.move(
             CameraPosition(
                 Point(55.029468, 82.92058), // Координаты улицы с зданиями
-                /* zoom = */ 13.0f,
+                /* zoom = */ 14.0f,
                 /* azimuth = */ 0.0f,
                 /* tilt = */ 30.0f
             )
@@ -151,7 +154,9 @@ class WorkActivity : AppCompatActivity() {
     }
 
     private fun showBottomSheet() {
-        // Открываем стандартную панель
+        if (isBottomSheetShowing) return
+        isBottomSheetShowing = true
+
         val view = layoutInflater.inflate(R.layout.bottom_sheet_work, null)
         val dialog = BottomSheetDialog(this)
 
@@ -159,6 +164,10 @@ class WorkActivity : AppCompatActivity() {
         dialog.setCancelable(true)
         dialog.setContentView(view)
         dialog.show()
+
+        dialog.setOnDismissListener {
+            isBottomSheetShowing = false
+        }
 
         db.collection("staff").whereEqualTo("uid", uid)
             .get()
@@ -496,6 +505,9 @@ class WorkActivity : AppCompatActivity() {
 
     // Функция для отслеживания новых записей в коллекции "orders"
     private fun startOrderTracking() {
+        if (isOrderTrackingStarted) return
+        isOrderTrackingStarted = true
+
         ordersListener = ordersCollection.addSnapshotListener { snapshot, e ->
             if (e != null) {
                 Log.w("Firestore", "Listen failed.", e)
@@ -585,6 +597,10 @@ class WorkActivity : AppCompatActivity() {
     private fun sendLocationToFirebase() {
         Log.d("Firestore", uid)
         val docRef = db.collection("staff").whereEqualTo("uid", uid)
+
+        latitude = 55.044546.toString()
+        longitude = 82.926609.toString()
+
         docRef.get()
             .addOnSuccessListener { documents ->
                 for (document in documents) {
@@ -614,8 +630,12 @@ class WorkActivity : AppCompatActivity() {
         db.collection("staff").whereEqualTo("uid", uid).get()
             .addOnSuccessListener { documents ->
                 for (document in documents) {
-                    val latitude = document.getDouble("latitude")
-                    val longitude = document.getDouble("longitude")
+                    val latitudeField = document.get("latitude")
+                    val longitudeField = document.get("longitude")
+
+                    val latitude: Double? = if (latitudeField is Number) latitudeField.toDouble() else null
+                    val longitude: Double? = if (longitudeField is Number) longitudeField.toDouble() else null
+
                     if (latitude != null && longitude != null) {
                         placeMarker(latitude, longitude, R.drawable.courier_map) // Синяя метка
                     }
@@ -624,7 +644,7 @@ class WorkActivity : AppCompatActivity() {
 
         Log.d("Mark", "Devision: ${devision.toString()}")
 
-// Получение координат ресторана
+    // Получение координат ресторана
         db.collection("restaurant").whereEqualTo("id", idRest).get()
             .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
@@ -677,7 +697,9 @@ class WorkActivity : AppCompatActivity() {
     }
     private fun placeMarker(latitude: Double, longitude: Double, marker: Int) {
         val marker = ImageProvider.fromResource(this, marker)
+        Log.d("MARKER", marker.toString())
         mapObjectCollection = mapView.map.mapObjects
+        mapObjectCollection.clear() // Clear existing markers
         mapObjectCollection.addPlacemark(Point(latitude, longitude), marker)
     }
 }

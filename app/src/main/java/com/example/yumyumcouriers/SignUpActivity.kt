@@ -76,7 +76,6 @@ class SignUpActivity : AppCompatActivity() {
                                                 val name = intent.getStringExtra("NAME").toString()
                                                 val surname = intent.getStringExtra("SURNAME").toString()
                                                 val patronic = intent.getStringExtra("PATRONIC").toString()
-                                                val number = intent.getStringExtra("NUMBER").toString()
                                                 val gender = intent.getStringExtra("GENDER").toString()
 
                                                 // Создаем объект данных для записи в коллекцию Firestore
@@ -84,7 +83,7 @@ class SignUpActivity : AppCompatActivity() {
                                                     "name" to name,
                                                     "surname" to surname,
                                                     "patronic" to patronic,
-                                                    "number" to number,
+                                                    "email" to email,
                                                     "gender" to gender,
                                                     "role" to "4",
                                                     "latitude" to "",

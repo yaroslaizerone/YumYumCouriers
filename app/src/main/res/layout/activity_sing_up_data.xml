@@ -129,16 +129,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/parentLayout">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/phoneEt"
-            style="@style/LoginTextInputInnerFieldStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Номер телефона*"
-            android:inputType="phone"
-            android:textColor="@color/white" />
-    </com.google.android.material.textfield.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
     <Spinner
         android:id="@+id/spinnerGender"

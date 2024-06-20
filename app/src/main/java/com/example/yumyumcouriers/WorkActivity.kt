@@ -598,8 +598,8 @@ class WorkActivity : AppCompatActivity() {
         Log.d("Firestore", uid)
         val docRef = db.collection("staff").whereEqualTo("uid", uid)
 
-        latitude = 55.044546.toString()
-        longitude = 82.926609.toString()
+/*        latitude = 55.044546.toString()
+        longitude = 82.926609.toString()*/
 
         docRef.get()
             .addOnSuccessListener { documents ->
@@ -699,7 +699,6 @@ class WorkActivity : AppCompatActivity() {
         val marker = ImageProvider.fromResource(this, marker)
         Log.d("MARKER", marker.toString())
         mapObjectCollection = mapView.map.mapObjects
-        mapObjectCollection.clear() // Clear existing markers
         mapObjectCollection.addPlacemark(Point(latitude, longitude), marker)
     }
 }
